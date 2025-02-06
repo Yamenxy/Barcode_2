@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            direction: ltr;
+        }
+        #reader {
+            width: 300px;
+            margin: auto;
+        }
+        select, button, input {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Attendance</h2>
+    
+    <div id="reader"></div>
+
+    <select id="attendanceType">
+        <option value="الحضور الاول">الحضور الأول</option>
+        <option value="الحضور الثاني">الحضور الثاني</option>
+        <option value="الحضور الثالث">الحضور الثالث</option>
+        <option value="الحضور الرابع">الحضور الرابع</option>
+        <option value="الحضور الخامس">الحضور الخامس</option>
+        <option value="الحضور السادس">الحضور السادس</option>
+        <option value="الحضور السابع">الحضور السابع</option>
+        <option value="الحضور الثامن">الحضور الثامن</option>
+        <option value="الحضور الشامل">الحضور الشامل</option>
+        <option value="الحضور التاسع">الحضور التاسع</option>
+        <option value="الحضور العاشر">الحضور العاشر</option>
+        <option value="الحضور الحادس عشر">الحضور الحادي عشر</option>
+        <!-- Add more options if needed -->
+    </select>
+
+    <br>
+
+    <input type="text" id="manualBarcode" placeholder="Or enter the code here">
+
+    <br>
+
+    <button onclick="startScanner()">Start Scanning</button>
+    <button onclick="submitManually()">Attend with Code</button>
+
+    <p id="status"></p>
+
+    <script>
+        const scriptURL = "https://script.google.com/macros/s/AKfycbyCB0SU5AVMXrPgI4qLiB_HG0OEV1YeQRgzl4L9EO5eGk-QoKPZrXzJMe2YzAGN_gWYBg/exec";
+        let scanner;
+
+        // Function to start scanning the barcode
+        function startScanner() {
+            scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+
+            scanner.render(onScanSuccess, (errorMessage) => {
+                console.warn(errorMessage);
+            });
+        }
+
+        // Function to handle barcode scanning success
+        function onScanSuccess(decodedText) {
+            scanner.clear();
+            document.getElementById("status").innerText = "Verifying...";
+
+            const attendanceType = document.getElementById("attendanceType").value;
+
+            // Send the barcode and attendance type to the server (Google Apps Script)
+            submitData(decodedText, attendanceType);
+        }
+
+        // Function to handle manual barcode submission
+        function submitManually() {
+            const barcode = document.getElementById("manualBarcode").value;
+            const attendanceType = document.getElementById("attendanceType").value;
+
+            if (!barcode) {
+                document.getElementById("status").innerText = "Please enter the barcode!";
+                return;
+            }
+
+            document.getElementById("status").innerText = "Verifying...";
+
+            // Send the barcode and attendance type to the server (Google Apps Script)
+            submitData(barcode, attendanceType);
+        }
+
+        // Function to send data to Google Apps Script
+        function submitData(barcode, attendanceType) {
+            fetch(scriptURL, {
+                method: 'POST',
+                body: new URLSearchParams({
+                    barcode: barcode,
+                    attendanceType: attendanceType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("status").innerText = data.message; // Display response message
+            })
+            .catch(error => {
+                console.error("Error:", error.message);
+                document.getElementById("status").innerText = "Connection error occurred!"; // Display error message
+            });
+        }
+    </script>
+
+</body>
+</html>
