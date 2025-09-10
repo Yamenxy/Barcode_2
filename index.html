@@ -1,128 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Scanner</title>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            direction: ltr;
-        }
-        #reader {
-            width: 300px;
-            margin: auto;
-        }
-        select, button, input {
-            margin-top: 10px;
-            padding: 10px;
-            font-size: 16px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barcode Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      direction: ltr;
+    }
+    #reader {
+      width: 300px;
+      margin: auto;
+    }
+    select, button, input {
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 90%;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    th {
+      background: #f2f2f2;
+    }
+  </style>
+  <style>
+  .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+
 </head>
 <body>
 
-    <h2>Attendance</h2>
-    
-    <div id="reader"></div>
+  <h2>Attendance</h2>
+  
+  <div id="reader"></div>
 
-    <select id="attendanceType">
-        <option value="الحضور الاول">الحضور الأول</option>
-        <option value="الحضور الثاني">الحضور الثاني</option>
-        <option value="الحضور الثالث">الحضور الثالث</option> 
-        <option value="الحضور الرابع">الحضور الرابع</option>
-        <option value="الحضور الخامس">الحضور الخامس</option>
-         <option value="الحضور السادس">الحضور السادس</option> 
-        <option value="الحضور السابع">الحضور السابع</option>
-        <option value="الحضور الثامن">الحضور الثامن</option>
-        <option value="الحضور الشامل">الحضور الشامل</option>
-        <option value="الحضور التاسع">الحضور التاسع</option>
-        <option value="الحضور العاشر">الحضور العاشر</option>
-<!--         <option value="حضور المراجعة الاولي">حضور المراجعة الاولي</option> 
-        <option value="حضور المراجعة الثانية">حضور المراجعة الثانية</option> 
-        <option value="حضور المراجعة الثالثة">حضور المراجعة الثالثة</option> 
-        <option value="حضور المراجعة ليلة الامتحان">حضور المراجعة ليلة الامتحان</option>  -->
-        <!-- Add more options if needed --> 
-    </select>
+  <select id="attendanceType">
+    <option value="الحضور الاول">الحضور الأول</option>
+    <option value="الحضور الثاني">الحضور الثاني</option>
+    <option value="الحضور الثالث">الحضور الثالث</option>
+    <option value="الحضور الرابع">الحضور الرابع</option>
+    <option value="الحضور الخامس">الحضور الخامس</option>
+    <option value="الحضور السادس">الحضور السادس</option>
+    <option value="الحضور السابع">الحضور السابع</option>
+    <option value="الحضور الثامن">الحضور الثامن</option>
+    <option value="الحضور الشامل">الحضور الشامل</option>
+    <option value="الحضور التاسع">الحضور التاسع</option>
+    <option value="الحضور العاشر">الحضور العاشر</option>
+    <option value="الحضور الحادي عشر">الحضور الحادي عشر</option>
+  </select>
 
-    <br>
+  <br>
 
-    <input type="text" id="manualBarcode" placeholder="Or enter the code here" maxlength="5" oninput="autoSubmitIfComplete(this)">
+  <input 
+    type="text" 
+    id="manualBarcode" 
+    placeholder="Or enter the code here" 
+    autofocus 
+    oninput="checkBarcode(this)">
 
-    <br>
+  <br>
 
-    <button onclick="startScanner()">Start Scanning</button>
-    <button onclick="submitManually()">Attend with Code</button>
+  <button onclick="startScanner()">Start Scanning</button>
+  <button onclick="submitManually()">Attend with Code</button>
 
-    <p id="status"></p>
+  <p id="status"></p>
 
-    <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbwLwYn3a5jurzjOk_srdjvRWz8y2WlV5HWTMaAG6_FMwEiKeWz4auZo1Vx-JsNGgQZigQ/exec";
-        let scanner;
+  <!-- Table to display attendance -->
+  <p id="studentName"></p>
+  <div id="attendanceTable"></div>
 
-               function autoSubmitIfComplete(input) {
-                    if (input.value.length === 5) {
-                    submitManually();
-                    }
-                }
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxF0wdpEUZDcb6ovVPfJ7URoJHuqTJ4mjqDKsBjn5FmVKNQARMx788s31xi0F_GpgWfxA/exec"; 
+    let scanner, lastScanned = "", lastTime = 0;
 
-        // Function to start scanning the barcode
-        function startScanner() {
-            scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    function checkBarcode(input) {
+      input.value = input.value.replace(/\D/g, '');
+      if (input.value.length === 5) {
+        submitManually();
+        input.value = ""; 
+      }
+    }
 
-            scanner.render(onScanSuccess, (errorMessage) => {
-                console.warn(errorMessage);
-            });
-        }
+    function startScanner() {
+      scanner = new Html5QrcodeScanner("reader", { fps: 30, qrbox: 250 });
+      scanner.render(onScanSuccess, (errorMessage) => {
+        console.warn(errorMessage);
+      });
+    }
 
-        // Function to handle barcode scanning success
-        function onScanSuccess(decodedText) {
-            scanner.clear();
-            document.getElementById("status").innerText = "Verifying...";
+    function onScanSuccess(decodedText) {
+      const now = Date.now();
+      if (decodedText === lastScanned && (now - lastTime < 1000)) {
+        return;
+      }
+      lastScanned = decodedText;
+      lastTime = now; 
+      document.getElementById("status").innerText = "Verifying...";
+      const attendanceType = document.getElementById("attendanceType").value;
+      submitData(decodedText, attendanceType);
+    }
 
-            const attendanceType = document.getElementById("attendanceType").value;
+    function submitManually() {
+      const barcode = document.getElementById("manualBarcode").value;
+      const attendanceType = document.getElementById("attendanceType").value;
+      if (!barcode) {
+        document.getElementById("status").innerText = "Please enter the barcode!";
+        return;
+      }
+      document.getElementById("status").innerText = "Verifying...";
+      submitData(barcode, attendanceType);
+    }
 
-            // Send the barcode and attendance type to the server (Google Apps Script)
-            submitData(decodedText, attendanceType);
-        }
+    function showLoading() {
+      document.getElementById("status").innerHTML = 'جارٍ التحقق... <span class="spinner"></span>';
+    }
 
-        // Function to handle manual barcode submission
-        function submitManually() {
-            const barcode = document.getElementById("manualBarcode").value;
-            const attendanceType = document.getElementById("attendanceType").value;
+    function hideLoading(message) {
+      document.getElementById("status").innerText = message;
+    }
 
-            if (!barcode) {
-                document.getElementById("status").innerText = "Please enter the barcode!";
-                return;
-            }
+    function submitData(barcode, attendanceType) {
+      // Clear old data before verifying
+      document.getElementById("studentName").innerText = "";
+      document.getElementById("attendanceTable").innerHTML = "";
 
-            document.getElementById("status").innerText = "Verifying...";
+      showLoading(); // 👈 عرض السبينر
 
-            // Send the barcode and attendance type to the server (Google Apps Script)
-            submitData(barcode, attendanceType);
-        }
+      fetch(scriptURL, {
+        method: 'POST',
+        body: new URLSearchParams({
+          barcode: barcode,
+          attendanceType: attendanceType
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+           hideLoading(data.message); // 👈 إخفاء السبينر وعرض النتيجة
+           if (data.studentName) {
+               document.getElementById("studentName").innerText = "الطالب: " + data.studentName;
+           }
+           if (data.attendance) {
+               renderAttendanceTable(data.attendance);
+           }
+       })
+      .catch(error => {
+        console.error("Error:", error.message);
+        hideLoading("Connection error occurred!");
+      });
+    }
 
-        // Function to send data to Google Apps Script
-        function submitData(barcode, attendanceType) {
-            fetch(scriptURL, {
-                method: 'POST',
-                body: new URLSearchParams({
-                    barcode: barcode,
-                    attendanceType: attendanceType
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("status").innerText = data.message; // Display response message
-            })
-            .catch(error => {
-                console.error("Error:", error.message);
-                document.getElementById("status").innerText = "Connection error occurred!"; // Display error message
-            });
-        }
-    </script>
+
+
+    function renderAttendanceTable(attendanceArray) {
+      let headers = [
+        "الحضور الأول","الحضور الثاني","الحضور الثالث","الحضور الرابع",
+        "الحضور الخامس","الحضور السادس","الحضور السابع","الحضور الثامن",
+        "الحضور الشامل","الحضور التاسع","الحضور العاشر","الحضور الحادي عشر",
+        "حضور المراجعة الأولى","حضور المراجعة الثانية","حضور المراجعة الثالثة","حضور المراجعة ليلة الامتحان"
+      ];
+      
+      let table = "<table><tr>";
+      headers.forEach(h => table += `<th>${h}</th>`);
+      table += "</tr><tr>";
+      attendanceArray.forEach(val => {
+        table += `<td>${val === "✓" ? "✅" : "❌"}</td>`;
+      });
+      table += "</tr></table>";
+      document.getElementById("attendanceTable").innerHTML = table;
+    }
+  </script>
 
 </body>
 </html>
