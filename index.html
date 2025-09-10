@@ -40,16 +40,16 @@
         <option value="الحضور الشامل">الحضور الشامل</option>
         <option value="الحضور التاسع">الحضور التاسع</option>
         <option value="الحضور العاشر">الحضور العاشر</option>
-        <option value="حضور المراجعة الاولي">حضور المراجعة الاولي</option> 
+<!--         <option value="حضور المراجعة الاولي">حضور المراجعة الاولي</option> 
         <option value="حضور المراجعة الثانية">حضور المراجعة الثانية</option> 
         <option value="حضور المراجعة الثالثة">حضور المراجعة الثالثة</option> 
-        <option value="حضور المراجعة ليلة الامتحان">حضور المراجعة ليلة الامتحان</option> 
+        <option value="حضور المراجعة ليلة الامتحان">حضور المراجعة ليلة الامتحان</option>  -->
         <!-- Add more options if needed --> 
     </select>
 
     <br>
 
-    <input type="text" id="manualBarcode" placeholder="Or enter the code here">
+    <input type="text" id="manualBarcode" placeholder="Or enter the code here" maxlength="5" oninput="autoSubmitIfComplete(this)">
 
     <br>
 
@@ -61,6 +61,12 @@
     <script>
         const scriptURL = "https://script.google.com/macros/s/AKfycbwLwYn3a5jurzjOk_srdjvRWz8y2WlV5HWTMaAG6_FMwEiKeWz4auZo1Vx-JsNGgQZigQ/exec";
         let scanner;
+
+               function autoSubmitIfComplete(input) {
+                    if (input.value.length === 5) {
+                    submitManually();
+                    }
+                }
 
         // Function to start scanning the barcode
         function startScanner() {
